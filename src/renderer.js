@@ -1,5 +1,6 @@
 ﻿import './styles.css';
 import { createAdFilteringLoader } from './ad-filter.js';
+import { applyIntentExtras } from './intent-extras.js';
 
 const api = window.cineflow;
 const IMAGE_BASE = 'https://image.tmdb.org/t/p';
@@ -150,6 +151,8 @@ const NEGATIVE_GENRE_HINTS = [
   { patterns: ['不要血腥', '不血腥', '别血腥', '不要暴力', '不暴力'], genreIds: [27, 53, 80] },
   { patterns: ['不要爱情', '不想看爱情', '别爱情'], genreIds: [10749] }
 ];
+
+applyIntentExtras(PROMPT_INTENTS, SEARCH_PROMPTS, NEGATIVE_GENRE_HINTS);
 
 const dom = {
   appShell: document.querySelector('.app-shell'),

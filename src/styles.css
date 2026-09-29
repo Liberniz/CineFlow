@@ -8640,6 +8640,12 @@ body.island-expanded-mode .favorites-panel {
   display: none;
 }
 
+/* 贴边 docked 态同样隐藏收藏面板与其玫红拉出柄，边缘只保留"拉出"悬浮窗。 */
+body.island-docked-mode .favorites-panel,
+body.island-docked-mode .favorites-pull-handle {
+  display: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .favorites-panel,
   .favorite-item {
