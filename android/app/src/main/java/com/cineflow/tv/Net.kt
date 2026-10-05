@@ -44,7 +44,9 @@ object Net {
             }
 
             override fun onResponse(call: Call, response: Response) {
-                cont.resume(response)
+                // CancellableContinuation.resume has a 2-arg member overload
+                // (value, onCancellation) that shadows the stdlib extension.
+                cont.resume(response, null)
             }
         })
     }

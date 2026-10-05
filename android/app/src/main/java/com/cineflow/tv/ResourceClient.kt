@@ -208,7 +208,7 @@ return jsonOf("name" to site.optString("name").ifEmpty { site.optString("key")},
 }
 
 private fun extractTvBoxSites(raw: Any?): List<JSONObject>? {
-val sites: JSONArray? = when (raw) {
+val sites: JSONArray = when (raw) {
 is JSONArray -> raw
 is JSONObject -> raw.optJSONArray("sites")
 else -> null
@@ -230,6 +230,7 @@ if (raw is JSONObject || raw is JSONArray) {
 extractTvBoxSites(raw)?.let { return it}
 if (raw is JSONObject) {
 raw.optJSONArray("sources")?.let { return it.toObjectList()}
+if (isTvBoxSite(raw)) tvBoxToEntry(raw)?.let { return listOf(it) }
 if (raw.optString("name").isNotEmpty() || raw.optString("api").isNotEmpty() ||
 raw.optString("url").isNotEmpty() || raw.optString("endpoint").isNotEmpty()
 ) return listOf(raw)
@@ -299,7 +300,9 @@ var input: Any? = payload
 val text = payload?.toString()?.replace("\uFEFF", "")?.trim().orEmpty()
 if (payload == null || payload is String) {
 if (text.isEmpty()) throw BridgeError("INVALID_RESOURCE_SOURCE_CONFIG", "请输入外部源 JSON、分行配置或源配置地址。")
-input = if (Regex("^https?://", RegexOption.IGNORE_CASE).containsMatchIn(text) && '\n'!in text) {
+val looksLikeSingleUrl = !text.contains("\n") &&
+Regex("^https?://", RegexOption.IGNORE_CASE).containsMatchIn(text)
+input = if (looksLikeSingleUrl) {
 fetchRemoteText(text)
 } else text
 }
