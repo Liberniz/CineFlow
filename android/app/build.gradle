@@ -39,7 +39,7 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("org.nanohttpd:nanohttpd:2.3.2")
+    implementation("org.nanohttpd:nanohttpd:2.3.1")
 
     // ExoPlayer (Media3) for TV playback: HLS / DASH / progressive.
     def media3Version = "1.5.1"
