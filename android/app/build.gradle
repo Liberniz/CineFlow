@@ -42,7 +42,8 @@ dependencies {
     implementation("org.nanohttpd:nanohttpd:2.3.1")
 
     // ExoPlayer (Media3) for TV playback: HLS / DASH / progressive.
-    def media3Version = "1.5.1"
+    // Pinned to 1.4.1 while compileSdk is 34 (1.5.x requires compileSdk 35).
+    def media3Version = "1.4.1"
     implementation("androidx.media3:media3-exoplayer:$media3Version")
     implementation("androidx.media3:media3-exoplayer-hls:$media3Version")
     implementation("androidx.media3:media3-exoplayer-dash:$media3Version")
