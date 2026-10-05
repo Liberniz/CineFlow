@@ -11,8 +11,8 @@ android {
         applicationId = "com.cineflow.tv"
         minSdk = 24
         targetSdk = 34
-        versionCode = 320
-        versionName = "3.2.0"
+        versionCode = 400
+        versionName = "4.0.0"
     }
 
     buildTypes {

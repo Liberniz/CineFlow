@@ -3,7 +3,12 @@ name: Build Android TV
 on:
   push:
     branches: [android-tv]
+    tags:
+      - 'v*'
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build-apk:
@@ -48,3 +53,16 @@ jobs:
         with:
           name: CineFlow-tv-apk
           path: android/app/build/outputs/apk/debug/*.apk
+
+      # On version tags (e.g. v4.0.0): attach a versioned APK to the GitHub Release.
+      - name: Rename APK for release
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          cp android/app/build/outputs/apk/debug/app-debug.apk "android/app/build/outputs/apk/debug/CineFlow-tv-${VERSION}.apk"
+
+      - name: Publish to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: android/app/build/outputs/apk/debug/CineFlow-tv-*.apk
