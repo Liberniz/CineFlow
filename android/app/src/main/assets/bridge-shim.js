@@ -10,6 +10,91 @@
  */
 (function () {
   'use strict';
+
+  // --- Polyfills for older TV WebViews (e.g. Sony Bravia) ---
+  // The TV web bundle is transpiled down to ES2017 syntax, but these
+  // runtime APIs are newer than the syntax level and cannot be
+  // transpiled; without them the renderer throws and the app freezes
+  // on the startup splash. Defined only when missing.
+  if (!Array.prototype.flat) {
+    Object.defineProperty(Array.prototype, 'flat', {
+      value: function (depth) {
+        var d = depth === undefined ? 1 : Number(depth) || 0;
+        var out = [];
+        (function flatten(arr, level) {
+          for (var i = 0; i < arr.length; i++) {
+            if (!(i in arr)) continue;
+            var v = arr[i];
+            if (Array.isArray(v) && level > 0) flatten(v, level - 1);
+            else out.push(v);
+          }
+        })(this, d);
+        return out;
+      },
+      writable: true, configurable: true
+    });
+  }
+  if (!Array.prototype.flatMap) {
+    Object.defineProperty(Array.prototype, 'flatMap', {
+      value: function (fn, thisArg) {
+        var out = [];
+        for (var i = 0; i < this.length; i++) {
+          if (!(i in this)) continue;
+          var v = fn.call(thisArg, this[i], i, this);
+          if (Array.isArray(v)) {
+            for (var j = 0; j < v.length; j++) out.push(v[j]);
+          } else out.push(v);
+        }
+        return out;
+      },
+      writable: true, configurable: true
+    });
+  }
+  if (!String.prototype.replaceAll) {
+    Object.defineProperty(String.prototype, 'replaceAll', {
+      value: function (search, replacement) {
+        if (search instanceof RegExp) {
+          if (!search.global) throw new TypeError('replaceAll must be called with a global RegExp');
+          return this.replace(search, replacement);
+        }
+        var needle = String(search);
+        var s = String(this);
+        if (needle === '') {
+          var rep = typeof replacement === 'function' ? '' : String(replacement);
+          if (typeof replacement === 'function') return s.split('').join('');
+          var res = rep;
+          for (var i = 0; i < s.length; i++) res += s[i] + rep;
+          return res;
+        }
+        if (typeof replacement === 'function') {
+          var out = '';
+          var idx = 0;
+          var pos;
+          while ((pos = s.indexOf(needle, idx)) !== -1) {
+            out += s.slice(idx, pos) + String(replacement(needle, pos, s));
+            idx = pos + needle.length;
+          }
+          return out + s.slice(idx);
+        }
+        return s.split(needle).join(String(replacement));
+      },
+      writable: true, configurable: true
+    });
+  }
+  if (typeof Promise !== 'undefined' && !Promise.prototype.finally) {
+    Object.defineProperty(Promise.prototype, 'finally', {
+      value: function (onFinally) {
+        var C = this.constructor || Promise;
+        function cleanup() { return typeof onFinally === 'function' ? onFinally() : undefined; }
+        return this.then(
+          function (v) { return C.resolve(cleanup()).then(function () { return v; }); },
+          function (e) { return C.resolve(cleanup()).then(function () { throw e; }); }
+        );
+      },
+      writable: true, configurable: true
+    });
+  }
+
   if (window.cineflow) return;
 
   var nativeBridge = null;
