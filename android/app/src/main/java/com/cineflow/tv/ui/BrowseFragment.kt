@@ -26,6 +26,7 @@ class BrowseFragment : Fragment() {
 
     private var mediaType: String = "all"
     private var genreId: Int = 0
+    private var sortBy: String = "popularity.desc"
     private var page: Int = 1
     private var loading: Boolean = false
     private var exhausted: Boolean = false
@@ -62,6 +63,22 @@ class BrowseFragment : Fragment() {
         }
         genreList.adapter = genreAdapter
         genreAdapter.submit(listOf(ChipAdapter.Chip(0, "全部")), 0)
+
+        val sortList = view.findViewById<RecyclerView>(R.id.sortChips)
+        sortList.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+        val sortAdapter = ChipAdapter { chip ->
+            sortBy = chip.payload
+            reload()
+        }
+        sortList.adapter = sortAdapter
+        sortAdapter.submit(
+            listOf(
+                ChipAdapter.Chip(0, "热度优先", "popularity.desc"),
+                ChipAdapter.Chip(1, "评分最高", "vote_average.desc"),
+                ChipAdapter.Chip(2, "最新发布", "primary_release_date.desc"),
+                ChipAdapter.Chip(3, "经典最早", "primary_release_date.asc")
+            ), 0
+        )
 
         val (span, itemWidth) = requireContext().gridGeometry()
         val grid = view.findViewById<RecyclerView>(R.id.browseGrid)
@@ -120,7 +137,7 @@ class BrowseFragment : Fragment() {
                         "mediaType" to mediaType,
                         "genreId" to genreId,
                         "page" to targetPage,
-                        "sortBy" to "popularity.desc"
+                        "sortBy" to sortBy
                     )
                 )
             }.getOrNull()

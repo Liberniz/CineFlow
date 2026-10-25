@@ -20,6 +20,14 @@
         android:focusable="false"
         android:paddingTop="12dp" />
 
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/sortChips"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:focusable="false"
+        android:paddingTop="12dp" />
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"

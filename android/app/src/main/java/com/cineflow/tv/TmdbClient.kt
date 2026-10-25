@@ -346,8 +346,15 @@ class TmdbClient(private val store: Store) {
         }
         val tvGenres = if (genreRaw.isNotBlank()) mapGenreParamToTv(withGenres) else null
         if (mediaType == "tv" || (mediaType == "all" && tvGenres != null)) {
+            // /discover/tv has no primary_release_date sort; its date
+            // field is first_air_date. Map so date sorts work for TV too.
+            val tvSortBy = if (sortBy.startsWith("primary_release_date")) {
+                sortBy.replace("primary_release_date", "first_air_date")
+            } else {
+                sortBy
+            }
             val params = HashMap<String, String>()
-            params["sort_by"] = sortBy
+            params["sort_by"] = tvSortBy
             params["vote_count.gte"] = voteCountGte.toInt().toString()
             if (voteAverageGte != null) params["vote_average.gte"] = voteAverageGte
             if (tvGenres != null) params["with_genres"] = tvGenres
