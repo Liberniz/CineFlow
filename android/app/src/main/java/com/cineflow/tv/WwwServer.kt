@@ -8,8 +8,15 @@ import java.io.IOException
 /**
  * Serves the Vite-built web app (assets/www, staged by CI from dist/) over
  * http://127.0.0.1:<port>/. Serving over HTTP instead of file:// avoids
- * module/CORS quirks in WebView. The bridge shim + a CSS rule hiding the
- * desktop window controls are injected into index.html before any page script.
+ * module/CORS quirks in WebView. A CSS rule hiding the desktop window
+ * controls is injected into index.html, and the bridge shim is referenced
+ * as an external script (also injected, before any page script).
+ *
+ * The shim must NOT be inlined: index.html carries a CSP meta of
+ * `script-src 'self'`, which makes WebView refuse inline scripts — an
+ * inlined shim silently never runs and window.cineflow stays undefined.
+ * Served as /bridge-shim.js from this server it is same-origin and loads
+ * like any other bundle file.
  */
 class WwwServer(private val context: Context, private val shimJs: String) : NanoHTTPD(0) {
 
@@ -18,14 +25,21 @@ class WwwServer(private val context: Context, private val shimJs: String) : Nano
         if (path.isEmpty() || path.endsWith("/")) path += "index.html"
         // Basic path traversal guard.
         if (".." in path) return newFixedLengthResponse(Response.Status.FORBIDDEN, "text/plain", "forbidden")
+        if (path == "bridge-shim.js") {
+            val shimBytes = shimJs.toByteArray(Charsets.UTF_8)
+            return newFixedLengthResponse(
+                Response.Status.OK, "text/javascript",
+                ByteArrayInputStream(shimBytes), shimBytes.size.toLong()
+            )
+        }
         return try {
             val bytes = context.assets.open("www/$path").readBytes()
             if (path == "index.html") {
                 val html = String(bytes, Charsets.UTF_8)
-                // NOTE: bridge-shim.js must not contain the literal "</script".
                 val injected = html.replaceFirst(
                     "</head>",
-                    "<style>.window-controls{display:none!important}</style><script>$shimJs</script></head>"
+                    "<style>.window-controls{display:none!important}</style>" +
+                        "<script src=\"/bridge-shim.js\"></script></head>"
                 )
                 newFixedLengthResponse(Response.Status.OK, "text/html", injected)
             } else {

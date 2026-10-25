@@ -239,4 +239,19 @@
   def('openExternal', rpc('shell:openExternal'));
 
   window.cineflow = api;
+
+  // --- Boot watchdog ---
+  // The renderer sets window.__cineflowBooted when the startup splash is
+  // dismissed (successfully or with an error banner). If that never
+  // happens — the bundle failed to parse on an old WebView, or the first
+  // metadata load never came back — don't spin silently forever:
+  // replace the splash status with an actionable hint.
+  setTimeout(function () {
+    if (window.__cineflowBooted) return;
+    var el = null;
+    try { el = document.querySelector('#splashStatus'); } catch (e) { /* ignore */ }
+    if (el) {
+      el.textContent = '加载超时：可能是网络不通或代理未生效，请检查网络与代理设置后重启应用';
+    }
+  }, 12000);
 })();

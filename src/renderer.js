@@ -889,6 +889,9 @@ function disposeStartupSplashCanvas() {
 function hideStartupSplash() {
   if (!dom.splash || state.splashHidden) return;
   state.splashHidden = true;
+  // Read by the Android TV bridge shim's boot watchdog: reaching this
+  // point (with data or with an error banner) means boot completed.
+  window.__cineflowBooted = true;
   setSplashStatus('正在进入 CineFlow');
   dom.splash.classList.add('ready');
 
