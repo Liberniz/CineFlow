@@ -170,8 +170,10 @@
             <div id="settingsState" class="settings-state"></div>
             <label class="settings-label" for="apiCredentialInput">TMDB API Key 或 Read Access Token</label>
             <textarea id="apiCredentialInput" rows="4" spellcheck="false" placeholder="粘贴 TMDB v3 API Key，或以 eyJ... 开头的 Read Access Token"></textarea>
+            <button class="scan-input-btn is-hidden" type="button" data-scan-for="apiCredentialInput" data-scan-title="TMDB API Key 或 Read Access Token">扫码输入</button>
             <label class="settings-label" for="proxyInput">代理地址</label>
             <input id="proxyInput" class="settings-input" type="text" spellcheck="false" placeholder="system 或 http://127.0.0.1:7890 / socks5://127.0.0.1:7890" />
+            <button class="scan-input-btn is-hidden" type="button" data-scan-for="proxyInput" data-scan-title="代理地址">扫码输入</button>
             <label class="settings-label" for="resourceModeSelect">介绍页资源查找</label>
             <select id="resourceModeSelect" class="settings-input">
               <option value="stable">稳定优先（推荐）</option>
@@ -185,6 +187,7 @@
             <select id="playbackProxySelect" class="settings-input"></select>
             <label class="settings-label" for="resourceSourceInput">自定义外部源导入</label>
             <textarea id="resourceSourceInput" rows="5" spellcheck="false" placeholder="支持 TVBox 配置 / JSON 数组、单行 name|api|modes|note，或直接粘贴配置 URL"></textarea>
+            <button class="scan-input-btn is-hidden" type="button" data-scan-for="resourceSourceInput" data-scan-title="自定义外部源导入">扫码输入</button>
             <div class="settings-actions">
               <button id="importResourceSourcesBtn" class="secondary-button" type="button">导入并刷新</button>
               <button id="clearResourceSourcesBtn" class="secondary-button" type="button">清空自定义源</button>
@@ -194,6 +197,20 @@
               <button id="testConnectionBtn" class="secondary-button" type="button">测试连接</button>
               <button id="clearSettingsBtn" class="secondary-button" type="button">清除本机密钥</button>
             </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="scanInputModal" class="modal-backdrop is-hidden" aria-hidden="true">
+        <section class="settings-card scan-card" role="dialog" aria-modal="true" aria-labelledby="scanInputTitle">
+          <button id="scanInputCloseBtn" class="panel-close" type="button" aria-label="取消扫码输入">×</button>
+          <p class="eyebrow">Scan to type</p>
+          <h2 id="scanInputTitle">扫码输入</h2>
+          <p class="scan-hint">用手机扫下面的二维码，在手机上输入或粘贴，内容会直接填到电视上。手机和电视要在同一个局域网里。</p>
+          <img id="scanInputQr" class="scan-qr" alt="扫码输入二维码" />
+          <p id="scanInputUrl" class="scan-url"></p>
+          <div class="settings-actions">
+            <button id="scanInputCancelBtn" class="secondary-button" type="button">取消</button>
           </div>
         </section>
       </div>

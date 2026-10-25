@@ -56,6 +56,7 @@ class MainActivity : AppCompatActivity() {
         val shim = assets.open("bridge-shim.js").bufferedReader().readText()
         val server = WwwServer(this, shim)
         server.start()
+        bridge.wwwServer = server
         wwwServer = server
         val port = server.listeningPort
         webView.loadUrl("http://127.0.0.1:$port/index.html")

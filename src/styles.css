@@ -8889,3 +8889,43 @@ body.is-motion-throttled .favorites-panel .favorites-content {
   animation: none !important;
   will-change: auto;
 }
+
+/* Scan-to-type (TV settings): button under each long-text field and the
+   QR modal. Buttons stay hidden unless the TV bridge provides the API. */
+.scan-input-btn {
+  margin: 8px 0 4px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.scan-input-btn:hover,
+.scan-input-btn:focus-visible {
+  background: rgba(255, 255, 255, 0.14);
+}
+.scan-card {
+  text-align: center;
+}
+.scan-hint {
+  opacity: 0.75;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 8px 0 4px;
+}
+.scan-qr {
+  width: 260px;
+  height: 260px;
+  display: block;
+  margin: 14px auto 8px;
+  background: #fff;
+  border-radius: 12px;
+}
+.scan-url {
+  opacity: 0.55;
+  font-size: 12px;
+  word-break: break-all;
+  margin: 0 0 6px;
+}

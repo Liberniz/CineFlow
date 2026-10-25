@@ -6,7 +6,9 @@ import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Response
 import java.io.IOException
+import java.net.Inet4Address
 import java.net.InetSocketAddress
+import java.net.NetworkInterface
 import java.net.Proxy
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resumeWithException
@@ -35,6 +37,24 @@ object Net {
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(10, TimeUnit.SECONDS)
         .build()
+
+    /** First usable LAN IPv4 address (for the scan-to-type phone page), or null when offline. */
+    fun lanIpAddress(): String? {
+        try {
+            val ifaces = NetworkInterface.getNetworkInterfaces() ?: return null
+            for (iface in ifaces) {
+                if (!iface.isUp || iface.isLoopback || iface.isVirtual) continue
+                for (addr in iface.inetAddresses) {
+                    if (!addr.isLoopbackAddress && addr is Inet4Address) {
+                        return addr.hostAddress
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // fall through to null
+        }
+        return null
+    }
 
     suspend fun Call.await(): Response = suspendCancellableCoroutine { cont ->
         cont.invokeOnCancellation { cancel() }

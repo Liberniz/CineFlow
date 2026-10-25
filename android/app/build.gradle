@@ -11,8 +11,8 @@ android {
         applicationId = "com.cineflow.tv"
         minSdk = 24
         targetSdk = 34
-        versionCode = 401
-        versionName = "4.0.1"
+        versionCode = 410
+        versionName = "4.1.0"
     }
 
     buildTypes {
@@ -40,6 +40,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.nanohttpd:nanohttpd:2.3.1")
+    // QR code generation for the scan-to-type feature.
+    implementation("com.google.zxing:core:3.5.3")
 
     // ExoPlayer (Media3) for TV playback: HLS / DASH / progressive.
     // Pinned to 1.4.1 while compileSdk is 34 (1.5.x requires compileSdk 35).

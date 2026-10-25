@@ -1,15 +1,24 @@
 package com.cineflow.tv
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Color
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.util.Base64
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
+import java.io.ByteArrayOutputStream
+import java.security.SecureRandom
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -31,6 +40,13 @@ class CineflowBridge(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val mainHandler = Handler(Looper.getMainLooper())
+
+    /** Set by MainActivity once the local web server is running. */
+    var wwwServer: WwwServer? = null
+
+    // Scan-to-type session state (see WwwServer's /input routes).
+    private val inputLock = Any()
+    private var pendingInput: CompletableDeferred<String?>? = null
 
     // ------------------------------------------------------------------
     // JS entry points (called on a WebView background thread)
@@ -137,6 +153,12 @@ class CineflowBridge(
             }
             "app:clearResourceSources" -> resources.clearResourceSources()
             "app:testConnection" -> testConnection()
+            "app:beginScanInput" -> beginScanInput(args.optString(0, "扫码输入"))
+            "app:awaitScanInput" -> awaitScanInput()
+            "app:cancelScanInput" -> {
+                cancelScanInput()
+                null
+            }
 
             // --- TMDB ---
             "tmdb:initial" -> tmdb.getInitialData(publicCredentialState())
@@ -197,6 +219,69 @@ class CineflowBridge(
 
             else -> throw BridgeError("UNKNOWN_METHOD", "unknown bridge method: $method")
         }
+    }
+
+    // ------------------------------------------------------------------
+    // scan-to-type (phone browser types, TV receives)
+    // ------------------------------------------------------------------
+
+    private fun beginScanInput(title: String): JSONObject {
+        val server = wwwServer ?: throw BridgeError("NO_SERVER", "本地服务未启动")
+        val ip = Net.lanIpAddress() ?: throw BridgeError("NO_LAN_IP", "电视未连接到局域网，无法扫码输入")
+        val token = newScanToken()
+        synchronized(inputLock) {
+            pendingInput?.complete(null)
+            pendingInput = CompletableDeferred()
+            server.inputToken = token
+            server.inputTitle = title
+            server.onInputSubmitted = { text ->
+                synchronized(inputLock) { pendingInput?.complete(text) }
+            }
+        }
+        val url = "http://$ip:${server.listeningPort}/input?t=$token"
+        return jsonOf("url" to url, "qr" to makeQrDataUri(url))
+    }
+
+    private suspend fun awaitScanInput(): String? {
+        val deferred = synchronized(inputLock) { pendingInput } ?: return null
+        val text = withTimeoutOrNull(300_000) { deferred.await() }
+        synchronized(inputLock) {
+            if (pendingInput === deferred) {
+                pendingInput = null
+                wwwServer?.inputToken = null
+                wwwServer?.onInputSubmitted = null
+            }
+        }
+        return text
+    }
+
+    private fun cancelScanInput() {
+        synchronized(inputLock) {
+            pendingInput?.complete(null)
+            pendingInput = null
+            wwwServer?.inputToken = null
+            wwwServer?.onInputSubmitted = null
+        }
+    }
+
+    private fun newScanToken(): String {
+        val alphabet = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789"
+        val random = SecureRandom()
+        return (1..18).map { alphabet[random.nextInt(alphabet.length)] }.joinToString("")
+    }
+
+    private fun makeQrDataUri(content: String): String {
+        val size = 480
+        val matrix = QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, size, size)
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.RGB_565)
+        for (x in 0 until size) {
+            for (y in 0 until size) {
+                bitmap.setPixel(x, y, if (matrix[x, y]) Color.BLACK else Color.WHITE)
+            }
+        }
+        val out = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+        return "data:image/png;base64," + Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
     }
 
     // ------------------------------------------------------------------

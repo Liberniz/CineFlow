@@ -208,6 +208,12 @@ const dom = {
   saveSettingsBtn: document.querySelector('#saveSettingsBtn'),
   testConnectionBtn: document.querySelector('#testConnectionBtn'),
   clearSettingsBtn: document.querySelector('#clearSettingsBtn'),
+  scanInputModal: document.querySelector('#scanInputModal'),
+  scanInputTitle: document.querySelector('#scanInputTitle'),
+  scanInputQr: document.querySelector('#scanInputQr'),
+  scanInputUrl: document.querySelector('#scanInputUrl'),
+  scanInputCancelBtn: document.querySelector('#scanInputCancelBtn'),
+  scanInputCloseBtn: document.querySelector('#scanInputCloseBtn'),
   closeChoiceModal: document.querySelector('#closeChoiceModal'),
   closeToIslandBtn: document.querySelector('#closeToIslandBtn'),
   exitAppBtn: document.querySelector('#exitAppBtn'),
@@ -4313,8 +4319,65 @@ function bindEvents() {
   dom.closeBtn.addEventListener('click', openCloseChoice);
 }
 
+// --- Scan-to-type (Android TV only): the bridge serves a LAN page with
+// a QR code; the phone types there and the text lands in the field.
+let scanInputOpen = false;
+
+function setScanModalVisible(visible) {
+  if (!dom.scanInputModal) return;
+  dom.scanInputModal.classList.toggle('is-hidden', !visible);
+  dom.scanInputModal.setAttribute('aria-hidden', visible ? 'false' : 'true');
+}
+
+async function openScanInput(fieldId, title) {
+  if (scanInputOpen || typeof api.beginScanInput !== 'function') return;
+  scanInputOpen = true;
+  try {
+    const session = await api.beginScanInput(title);
+    if (!session || !session.qr) {
+      toast('扫码输入启动失败');
+      return;
+    }
+    if (dom.scanInputTitle) dom.scanInputTitle.textContent = title;
+    if (dom.scanInputQr) dom.scanInputQr.src = session.qr;
+    if (dom.scanInputUrl) dom.scanInputUrl.textContent = session.url || '';
+    setScanModalVisible(true);
+    const text = await api.awaitScanInput();
+    if (text) {
+      const field = document.getElementById(fieldId);
+      if (field) {
+        field.value = text;
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+        field.focus();
+      }
+      toast('已填入，确认后点保存');
+    }
+  } catch (error) {
+    toast('扫码输入失败：' + readableError(error));
+  } finally {
+    scanInputOpen = false;
+    setScanModalVisible(false);
+  }
+}
+
+function initScanInput() {
+  if (typeof api.beginScanInput !== 'function') return;
+  document.querySelectorAll('.scan-input-btn').forEach((btn) => {
+    btn.classList.remove('is-hidden');
+    btn.addEventListener('click', () => {
+      openScanInput(btn.dataset.scanFor, btn.dataset.scanTitle || '扫码输入');
+    });
+  });
+  const cancel = () => {
+    if (typeof api.cancelScanInput === 'function') api.cancelScanInput();
+  };
+  if (dom.scanInputCancelBtn) dom.scanInputCancelBtn.addEventListener('click', cancel);
+  if (dom.scanInputCloseBtn) dom.scanInputCloseBtn.addEventListener('click', cancel);
+}
+
 initStartupSplashCanvas();
 bindEvents();
+initScanInput();
 syncResourceSettings();
 loadInitial();
 

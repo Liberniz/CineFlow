@@ -103,7 +103,7 @@
   var seq = 0;
   var pending = {};
 
-  function callNative(method, args) {
+  function callNative(method, args, timeoutMs) {
     return new Promise(function (resolve, reject) {
       if (!nativeBridge) {
         reject(new Error('no native bridge'));
@@ -124,7 +124,7 @@
           err.code = 'BRIDGE_TIMEOUT';
           reject(err);
         }
-      }, 90000);
+      }, timeoutMs || 90000);
     });
   }
 
@@ -189,8 +189,8 @@
 
   var api = {};
   function def(name, fn) { api[name] = fn; }
-  function rpc(method) {
-    return function () { return callNative(method, Array.prototype.slice.call(arguments)); };
+  function rpc(method, timeoutMs) {
+    return function () { return callNative(method, Array.prototype.slice.call(arguments), timeoutMs); };
   }
 
   // --- settings / storage ---
@@ -204,6 +204,10 @@
   def('importResourceSources', rpc('app:importResourceSources'));
   def('clearResourceSources', rpc('app:clearResourceSources'));
   def('testConnection', rpc('app:testConnection'));
+  // --- scan-to-type (TV shows a QR code, phone types on a LAN page) ---
+  def('beginScanInput', rpc('app:beginScanInput'));
+  def('awaitScanInput', rpc('app:awaitScanInput', 330000));
+  def('cancelScanInput', rpc('app:cancelScanInput'));
 
   // --- TMDB ---
   def('getInitialData', rpc('tmdb:initial'));
