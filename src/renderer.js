@@ -912,6 +912,11 @@ function hideStartupSplash() {
       disposeStartupSplashCanvas();
       dom.splash?.remove();
       document.body.classList.remove('splash-active', 'splash-revealing');
+      if (TV_MODE) {
+        // Land the remote's focus on content right away (error path has
+        // no cards; the settings button is the useful fallback there).
+        tvFocus(document.querySelector('.movie-card') || document.querySelector('#settingsBtn'));
+      }
     }, 980);
   }, delay);
 }
@@ -4319,6 +4324,177 @@ function bindEvents() {
   dom.closeBtn.addEventListener('click', openCloseChoice);
 }
 
+// --- TV remote navigation (Android TV only) ---
+// The shared UI is pointer-first. When the TV bridge shim flags TV mode
+// this module adds the remote layer on top: spatial D-pad navigation
+// across every interactive element, focus-on-open for modals/panels,
+// Enter-to-click for card-like elements, and a back hook the native
+// shell calls before falling back to history/exit.
+const TV_MODE = typeof window !== 'undefined' && !!window.__CINEFLOW_TV__;
+const TV_FOCUSABLE_SELECTOR = 'a[href], button, input, select, textarea, .movie-card, .resource-card, .style-chip, [tabindex]';
+let tvRestoreFocus = null;
+
+function tvIsOpen(el) {
+  if (!el) return false;
+  if (el === dom.detailPanel) return el.classList.contains('is-open');
+  return !el.classList.contains('is-hidden');
+}
+
+function tvLayers() {
+  return [dom.scanInputModal, dom.playerModal, dom.closeChoiceModal, dom.settingsModal, dom.detailPanel];
+}
+
+function tvActiveLayer() {
+  const layers = tvLayers();
+  for (const layer of layers) {
+    if (tvIsOpen(layer)) return layer;
+  }
+  return document.body;
+}
+
+function tvCollectFocusables(root) {
+  const out = [];
+  root.querySelectorAll(TV_FOCUSABLE_SELECTOR).forEach((el) => {
+    if (el.disabled) return;
+    if (el.closest('.is-hidden')) return;
+    if (el.getClientRects().length === 0) return;
+    // The closed detail panel sits off-canvas but still has geometry;
+    // never navigate into it while it is shut.
+    if (dom.detailPanel && !tvIsOpen(dom.detailPanel) && dom.detailPanel.contains(el)) return;
+    out.push(el);
+  });
+  return out;
+}
+
+function tvFocus(el) {
+  if (!el) return;
+  el.focus({ preventScroll: true });
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+}
+
+function tvNavigate(dir) {
+  const root = tvActiveLayer();
+  const items = tvCollectFocusables(root);
+  if (!items.length) return;
+  const current = document.activeElement;
+  if (!current || !items.includes(current)) {
+    tvFocus(items[0]);
+    return;
+  }
+  const r = current.getBoundingClientRect();
+  const rcx = r.left + r.width / 2;
+  const rcy = r.top + r.height / 2;
+  let best = null;
+  let bestScore = Infinity;
+  items.forEach((el) => {
+    if (el === current) return;
+    const c = el.getBoundingClientRect();
+    const dx = c.left + c.width / 2 - rcx;
+    const dy = c.top + c.height / 2 - rcy;
+    let axis;
+    let cross;
+    if (dir === 'left') { if (dx > -6) return; axis = -dx; cross = Math.abs(dy); }
+    else if (dir === 'right') { if (dx < 6) return; axis = dx; cross = Math.abs(dy); }
+    else if (dir === 'up') { if (dy > -6) return; axis = -dy; cross = Math.abs(dx); }
+    else { if (dy < 6) return; axis = dy; cross = Math.abs(dx); }
+    const score = axis + cross * 2.6 + Math.max(0, cross - axis) * 3;
+    if (score < bestScore) { bestScore = score; best = el; }
+  });
+  if (best) tvFocus(best);
+}
+
+function tvOnKeyDown(event) {
+  if (document.body.classList.contains('splash-active')) return;
+  const key = event.key;
+  if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight') {
+    const target = event.target;
+    const tag = target && target.tagName;
+    if (tag === 'SELECT') return;
+    const isTextField = tag === 'TEXTAREA'
+      || (tag === 'INPUT' && !['checkbox', 'radio', 'button', 'submit', 'range'].includes(target.type));
+    // Left/right keep their caret meaning inside text fields.
+    if (isTextField && (key === 'ArrowLeft' || key === 'ArrowRight')) return;
+    event.preventDefault();
+    tvNavigate(key.slice(5).toLowerCase());
+    return;
+  }
+  if (key === 'Enter') {
+    const el = document.activeElement;
+    if (!el || el === document.body) return;
+    const tag = el.tagName;
+    if (tag === 'BUTTON' || tag === 'A' || tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+    if (el.matches('.movie-card, .resource-card, .style-chip')) {
+      event.preventDefault();
+      el.click();
+    }
+  }
+}
+
+function tvPrepareCards() {
+  document.querySelectorAll('.movie-card, .resource-card, .style-chip').forEach((el) => {
+    if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0');
+  });
+}
+
+function tvWatchCards() {
+  tvPrepareCards();
+  let queued = false;
+  const observer = new MutationObserver(() => {
+    if (queued) return;
+    queued = true;
+    queueMicrotask(() => {
+      queued = false;
+      tvPrepareCards();
+    });
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
+function tvWatchLayers() {
+  const observer = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      const el = m.target;
+      if (!tvLayers().includes(el)) continue;
+      if (tvIsOpen(el)) {
+        if (!el.contains(document.activeElement)) tvRestoreFocus = document.activeElement;
+        setTimeout(() => {
+          if (!tvIsOpen(el) || el.contains(document.activeElement)) return;
+          const items = tvCollectFocusables(el);
+          if (items.length) tvFocus(items[0]);
+        }, 60);
+      } else if (tvRestoreFocus && document.contains(tvRestoreFocus)) {
+        tvFocus(tvRestoreFocus);
+        tvRestoreFocus = null;
+      }
+    }
+  });
+  tvLayers().forEach((el) => {
+    if (el) observer.observe(el, { attributes: true, attributeFilter: ['class', 'aria-hidden'] });
+  });
+}
+
+// Called by the native shell on the remote's Back key. Returns true when
+// a layer was closed (event consumed), false to let the shell proceed.
+window.__cineflowHandleBack = function () {
+  if (tvIsOpen(dom.scanInputModal)) {
+    if (typeof api.cancelScanInput === 'function') api.cancelScanInput();
+    return true;
+  }
+  if (tvIsOpen(dom.playerModal)) { closeResourcePlayer(); return true; }
+  if (tvIsOpen(dom.closeChoiceModal)) { closeCloseChoice(); return true; }
+  if (tvIsOpen(dom.settingsModal)) { closeSettings(); return true; }
+  if (tvIsOpen(dom.detailPanel)) { closeDetails(); return true; }
+  return false;
+};
+
+function initTvMode() {
+  if (!TV_MODE) return;
+  document.body.classList.add('tv-mode');
+  document.addEventListener('keydown', tvOnKeyDown, true);
+  tvWatchCards();
+  tvWatchLayers();
+}
+
 // --- Scan-to-type (Android TV only): the bridge serves a LAN page with
 // a QR code; the phone types there and the text lands in the field.
 let scanInputOpen = false;
@@ -4378,6 +4554,7 @@ function initScanInput() {
 initStartupSplashCanvas();
 bindEvents();
 initScanInput();
+initTvMode();
 syncResourceSettings();
 loadInitial();
 

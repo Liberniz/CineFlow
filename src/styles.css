@@ -8929,3 +8929,31 @@ body.is-motion-throttled .favorites-panel .favorites-content {
   word-break: break-all;
   margin: 0 0 6px;
 }
+
+/* TV mode (body.tv-mode, enabled only by the Android TV bridge):
+   remote-first adjustments layered over the shared desktop UI. */
+body.tv-mode {
+  cursor: none;
+}
+body.tv-mode .island-dock-handle {
+  display: none !important;
+}
+body.tv-mode *:focus {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+body.tv-mode .movie-card,
+body.tv-mode .resource-card,
+body.tv-mode .style-chip {
+  transition: transform 0.15s ease;
+}
+body.tv-mode .movie-card:focus,
+body.tv-mode .resource-card:focus,
+body.tv-mode .style-chip:focus {
+  transform: scale(1.05);
+  z-index: 4;
+}
+body.tv-mode ::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+}

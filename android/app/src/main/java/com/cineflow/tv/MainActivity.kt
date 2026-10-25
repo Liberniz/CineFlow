@@ -72,10 +72,19 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    // TV remote "back": go back in history first, otherwise exit.
+    // TV remote "back": the page gets first refusal — it closes its
+    // topmost layer (player / scan dialog / settings / detail panel) via
+    // window.__cineflowHandleBack. Only when nothing was open do we fall
+    // back to WebView history, and finally to leaving the app.
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK && webView.canGoBack()) {
-            webView.goBack()
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            webView.evaluateJavascript(
+                "!!(window.__cineflowHandleBack && window.__cineflowHandleBack())"
+            ) { result ->
+                if (result != "true") {
+                    if (webView.canGoBack()) webView.goBack() else finish()
+                }
+            }
             return true
         }
         return super.onKeyDown(keyCode, event)

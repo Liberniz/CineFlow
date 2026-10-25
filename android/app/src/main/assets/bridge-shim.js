@@ -95,6 +95,10 @@
     });
   }
 
+  // The renderer uses this flag to enable its TV remote interaction
+  // layer (spatial D-pad navigation, focus ring, back-key handling).
+  window.__CINEFLOW_TV__ = true;
+
   if (window.cineflow) return;
 
   var nativeBridge = null;
