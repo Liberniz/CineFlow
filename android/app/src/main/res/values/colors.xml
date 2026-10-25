@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="cf_bg">#0B0E13</color>
+    <color name="cf_panel">#131922</color>
+    <color name="cf_card">#1B2431</color>
+    <color name="cf_chip">#232E3D</color>
+    <color name="cf_text">#EDF2F5</color>
+    <color name="cf_text_dim">#9FB0BC</color>
+    <color name="cf_accent">#7FD7C6</color>
+    <color name="cf_accent2">#D8B874</color>
+    <color name="cf_on_accent">#0B0E13</color>
+</resources>

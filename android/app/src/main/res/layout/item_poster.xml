@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/posterRoot"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="@drawable/card_border"
+    android:orientation="vertical"
+    android:padding="4dp">
+
+    <ImageView
+        android:id="@+id/posterImage"
+        android:layout_width="124dp"
+        android:layout_height="186dp"
+        android:background="@color/cf_card"
+        android:contentDescription="@null"
+        android:scaleType="centerCrop" />
+
+    <TextView
+        android:id="@+id/posterTitle"
+        android:layout_width="124dp"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:paddingTop="6dp"
+        android:textColor="@color/cf_text"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/posterMeta"
+        android:layout_width="124dp"
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:textColor="@color/cf_text_dim"
+        android:textSize="11sp" />
+</LinearLayout>

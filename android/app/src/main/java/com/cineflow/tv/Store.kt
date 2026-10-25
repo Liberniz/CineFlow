@@ -39,6 +39,11 @@ class Store(context: Context) {
         get() = prefs.getLong("resourceConfigRevision", 0L)
         set(v) = prefs.edit().putLong("resourceConfigRevision", v).apply()
 
+    /** Native UI favorites: JSON array of compact movie objects. */
+    var favoritesJson: String
+        get() = prefs.getString("favorites", "[]") ?: "[]"
+        set(v) = prefs.edit().putString("favorites", v).apply()
+
     fun touchResourceConfig() {
         val now = System.currentTimeMillis()
         resourceConfigRevision = maxOf(now, resourceConfigRevision + 1)

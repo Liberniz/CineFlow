@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/detailScroll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/cf_bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/detailBackdrop"
+            android:layout_width="match_parent"
+            android:layout_height="330dp"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingLeft="32dp"
+            android:paddingRight="32dp"
+            android:paddingBottom="36dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingTop="18dp">
+
+                <ImageView
+                    android:id="@+id/detailPoster"
+                    android:layout_width="110dp"
+                    android:layout_height="165dp"
+                    android:background="@color/cf_card"
+                    android:contentDescription="@null"
+                    android:scaleType="centerCrop" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:paddingStart="22dp">
+
+                    <TextView
+                        android:id="@+id/detailTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/cf_text"
+                        android:textSize="27sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/detailMeta"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="8dp"
+                        android:textColor="@color/cf_accent2"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/detailGenres"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="6dp"
+                        android:textColor="@color/cf_text_dim"
+                        android:textSize="13sp" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingTop="16dp">
+
+                        <TextView
+                            android:id="@+id/detailPlayBtn"
+                            style="@style/CfChip"
+                            android:text="找资源播放" />
+
+                        <TextView
+                            android:id="@+id/detailFavBtn"
+                            style="@style/CfChip"
+                            android:text="☆ 收藏" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/detailOverview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:lineSpacingMultiplier="1.35"
+                android:paddingTop="18dp"
+                android:textColor="@color/cf_text"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/sourcesTitle"
+                style="@style/CfSectionTitle"
+                android:text="资源" />
+
+            <TextView
+                android:id="@+id/sourcesStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/cf_text_dim"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:id="@+id/sourcesContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/lineChips"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:focusable="false"
+                android:paddingTop="6dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/episodeGrid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:focusable="false"
+                android:paddingTop="8dp" />
+
+            <TextView
+                android:id="@+id/castTitle"
+                style="@style/CfSectionTitle"
+                android:text="演职人员" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/castList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:focusable="false" />
+
+            <TextView
+                android:id="@+id/recTitle"
+                style="@style/CfSectionTitle"
+                android:text="猜你喜欢" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:focusable="false" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

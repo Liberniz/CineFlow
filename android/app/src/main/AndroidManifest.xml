@@ -27,6 +27,11 @@
         </activity>
 
         <activity
+            android:name=".ui.DetailActivity"
+            android:exported="false"
+            android:configChanges="keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize" />
+
+        <activity
             android:name=".PlayerActivity"
             android:exported="false"
             android:launchMode="singleTop"

@@ -11,8 +11,8 @@ android {
         applicationId = "com.cineflow.tv"
         minSdk = 24
         targetSdk = 34
-        versionCode = 420
-        versionName = "4.2.0"
+        versionCode = 500
+        versionName = "5.0.0"
     }
 
     buildTypes {
@@ -42,6 +42,12 @@ dependencies {
     implementation("org.nanohttpd:nanohttpd:2.3.1")
     // QR code generation for the scan-to-type feature.
     implementation("com.google.zxing:core:3.5.3")
+
+    // Native TV UI (v5.0: replaces the WebView shell). Coil is pinned to
+    // 2.6.0: 2.7.x is built with Kotlin 2.0, whose metadata this project's
+    // Kotlin 1.9.24 compiler cannot read.
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("io.coil-kt:coil:2.6.0")
 
     // ExoPlayer (Media3) for TV playback: HLS / DASH / progressive.
     // Pinned to 1.4.1 while compileSdk is 34 (1.5.x requires compileSdk 35).

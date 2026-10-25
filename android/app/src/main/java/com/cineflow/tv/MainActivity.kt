@@ -1,29 +1,36 @@
 package com.cineflow.tv
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
-import android.webkit.WebSettings
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import com.cineflow.tv.ui.BrowseFragment
+import com.cineflow.tv.ui.FavoritesFragment
+import com.cineflow.tv.ui.Graph
+import com.cineflow.tv.ui.HomeFragment
+import com.cineflow.tv.ui.Images
+import com.cineflow.tv.ui.SearchFragment
+import com.cineflow.tv.ui.SettingsFragment
 
 /**
- * Main entry: fullscreen WebView hosting the CineFlow web app.
- * The JS bridge (CineflowBridge) is exposed as `CineflowNative`; the shim
- * (assets/bridge-shim.js) is injected into index.html by WwwServer before
- * any page script runs.
+ * Native TV shell (v5.0): a left nav rail + fragment content area.
+ * Replaces the old WebView host — the whole UI is native Views now,
+ * only the data layer (Store / TmdbClient / ResourceClient) and the
+ * ExoPlayer screen are carried over from the WebView era.
  */
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var webView: WebView
-    private var wwwServer: WwwServer? = null
+    private val fragments = HashMap<String, Fragment>()
+    private var currentTag: String = "home"
+    private lateinit var navItems: Map<String, TextView>
 
-    @SuppressLint("SetJavaScriptEnabled", "AddJavascriptInterface")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Graph.ensure(this)
+        Images.applyLoader(this)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         @Suppress("DEPRECATION")
         window.decorView.systemUiVisibility = (
@@ -31,60 +38,52 @@ class MainActivity : AppCompatActivity() {
                 or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
             )
+        setContentView(R.layout.activity_main)
 
-        val store = Store(this)
-        val tmdb = TmdbClient(store)
-        val resources = ResourceClient(store)
+        navItems = mapOf(
+            "home" to findViewById(R.id.navHome),
+            "browse" to findViewById(R.id.navBrowse),
+            "search" to findViewById(R.id.navSearch),
+            "fav" to findViewById(R.id.navFav),
+            "settings" to findViewById(R.id.navSettings)
+        )
+        navItems.forEach { (tag, view) ->
+            view.setOnClickListener { showTag(tag) }
+        }
+        showTag("home")
+        window.decorView.post { navItems["home"]?.requestFocus() }
+    }
 
-        webView = WebView(this).apply {
-            settings.javaScriptEnabled = true
-            settings.domStorageEnabled = true
-            settings.mediaPlaybackRequiresUserGesture = false
-            settings.cacheMode = WebSettings.LOAD_DEFAULT
-            // D-pad / remote friendly focus.
-            isFocusable = true
-            isFocusableInTouchMode = true
-            webViewClient = object : WebViewClient() {
-                // Keep navigation inside the WebView.
-                override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean = false
+    private fun showTag(tag: String) {
+        currentTag = tag
+        navItems.forEach { (t, v) -> v.isSelected = t == tag }
+        val fm = supportFragmentManager
+        val tx = fm.beginTransaction()
+        fragments.values.forEach { tx.hide(it) }
+        val existing = fragments[tag] ?: fm.findFragmentByTag(tag)
+        val f: Fragment = if (existing == null) {
+            val created = when (tag) {
+                "browse" -> BrowseFragment()
+                "search" -> SearchFragment()
+                "fav" -> FavoritesFragment()
+                "settings" -> SettingsFragment()
+                else -> HomeFragment()
             }
+            tx.add(R.id.contentContainer, created, tag)
+            created
+        } else {
+            tx.show(existing)
+            existing
         }
-        val bridge = CineflowBridge(this, webView, store, tmdb, resources)
-        webView.addJavascriptInterface(bridge, "CineflowNative")
-        setContentView(webView)
-
-        val shim = assets.open("bridge-shim.js").bufferedReader().readText()
-        val server = WwwServer(this, shim)
-        server.start()
-        bridge.wwwServer = server
-        wwwServer = server
-        val port = server.listeningPort
-        webView.loadUrl("http://127.0.0.1:$port/index.html")
+        fragments[tag] = f
+        tx.commit()
     }
 
-    override fun onDestroy() {
-        try {
-            wwwServer?.stop()
-        } catch (e: Exception) {
-            // ignore
-        }
-        webView.destroy()
-        super.onDestroy()
-    }
-
-    // TV remote "back": the page gets first refusal — it closes its
-    // topmost layer (player / scan dialog / settings / detail panel) via
-    // window.__cineflowHandleBack. Only when nothing was open do we fall
-    // back to WebView history, and finally to leaving the app.
+    // Remote Back: any section other than Home returns to Home first.
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            webView.evaluateJavascript(
-                "!!(window.__cineflowHandleBack && window.__cineflowHandleBack())"
-            ) { result ->
-                if (result != "true") {
-                    if (webView.canGoBack()) webView.goBack() else finish()
-                }
-            }
+        if (keyCode == KeyEvent.KEYCODE_BACK && currentTag != "home") {
+            showTag("home")
+            navItems["home"]?.requestFocus()
             return true
         }
         return super.onKeyDown(keyCode, event)

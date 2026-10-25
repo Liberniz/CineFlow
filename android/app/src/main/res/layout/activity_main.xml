@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/cf_bg"
+    android:orientation="horizontal">
+
+    <LinearLayout
+        android:layout_width="172dp"
+        android:layout_height="match_parent"
+        android:background="@color/cf_panel"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingBottom="24dp"
+            android:text="CineFlow"
+            android:textColor="@color/cf_accent"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/navHome"
+            style="@style/CfNavItem"
+            android:text="首页" />
+
+        <TextView
+            android:id="@+id/navBrowse"
+            style="@style/CfNavItem"
+            android:text="浏览" />
+
+        <TextView
+            android:id="@+id/navSearch"
+            style="@style/CfNavItem"
+            android:text="搜索" />
+
+        <TextView
+            android:id="@+id/navFav"
+            style="@style/CfNavItem"
+            android:text="收藏" />
+
+        <TextView
+            android:id="@+id/navSettings"
+            style="@style/CfNavItem"
+            android:text="设置" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/contentContainer"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1" />
+</LinearLayout>
