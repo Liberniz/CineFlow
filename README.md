@@ -4,7 +4,7 @@
 
 流畅、可定制的电影 / 节目推荐应用。（已在Linux Do上发布公告）
 
-**CineFlow** 基于Electron + Vite构建，使用TMDB数据源，支持自然语言搜索、个性化推荐、灵动岛模式、外部片源导入与应用内播放。桌面版支持 **Windows / macOS**，另有 **Android TV** 版可安装在电视上使用。
+**CineFlow** 基于Electron + Vite构建，使用TMDB数据源，支持自然语言搜索、个性化推荐、灵动岛模式、外部片源导入与应用内播放。桌面版支持 **Windows / macOS**，另有 **Android TV** 版可安装在电视上使用（v5.0.0 起为全原生 Kotlin 应用）。
 
 ## 简介
 
@@ -29,33 +29,43 @@
 
 ## 下载与安装
 
-前往 [GitHub Releases](https://github.com/Liberniz/CineFlow/releases) 下载最新版（当前 v4.0.0）：
+前往 [GitHub Releases](https://github.com/Liberniz/CineFlow/releases) 下载最新版（当前 v5.1.0）：
 
 | 平台 | 安装包 | 说明 |
 |---|---|---|
-| Windows 10 / 11（x64） | `CineFlow-4.0.0-Setup.exe` | nsis 安装包 |
-| macOS（Apple Silicon） | `CineFlow-4.0.0-arm64.dmg` / `.zip` | 右键 → 打开 可绕过 Gatekeeper |
-| macOS（Intel） | `CineFlow-4.0.0-x64.dmg` / `.zip` | 同上 |
-| Android TV | `CineFlow-tv-4.0.0.apk` | 见下文 |
+| Windows 10 / 11（x64） | `CineFlow-5.1.0-Setup.exe` | nsis 安装包 |
+| macOS（Apple Silicon） | `CineFlow-5.1.0-arm64.dmg` / `.zip` | 右键 → 打开 可绕过 Gatekeeper |
+| macOS（Intel） | `CineFlow-5.1.0-x64.dmg` / `.zip` | 同上 |
+| Android TV | `CineFlow-tv-5.1.0.apk` | 见下文 |
 
 > 所有安装包均为未签名构建。macOS 首次打开被拦截时，对应用点右键 → 打开 即可运行。
 
 ## Android TV 版
 
-电视版把同一套 Web 前端装进 Android 原生壳：WebView 承载界面，`window.cineflow` 由原生 Kotlin 实现（TMDB / 资源站 / 设置与桌面版同构），播放时自动拉起系统级 ExoPlayer（支持 HLS / DASH / 常规视频）。
+v5.0.0 起，电视版是**全原生 Kotlin 应用**（早期版本曾用 WebView 承载网页界面，在老电视上卡顿闪烁，已弃用）。界面为电视遥控器而设计：左侧导航（首页 / 浏览 / 搜索 / 收藏 / 设置），方向键移动焦点、聚焦描边放大，全部操作不需要鼠标。
+
+- **首页**：今日推荐、正在流行、大众流行三行海报墙。
+- **浏览**：电影 / 剧集分类 + 题材筛选，可按热度、评分、最新发布、经典最早排序，滚动自动加载下一页。
+- **搜索**：遥控器输入，或扫码用手机代打。
+- **详情页**：海报、简介、演职人员、猜你喜欢；自动查找外部资源（与桌面版同一套资源站与 TVBox 导入），选源、选线、选集后用 ExoPlayer 原生播放（HLS / DASH / 常规视频），页面型资源会自动解析真实播放地址。
+- **收藏**：详情页一键收藏，收藏页可按评分 / 年份排序。
+- **扫码输入**：TMDB 凭据、代理、自定义源、搜索词等长文本不用遥控器逐字敲——电视显示二维码，手机扫码在局域网页面里输入即可回填。
+- **代理**：TMDB 数据、海报图片与播放流量都走设置里的应用内代理（电视系统代理对应用不生效，请使用应用内设置）。
 
 安装方式（二选一）：
 
 ```bash
-adb install CineFlow-tv-4.0.0.apk
+adb install CineFlow-tv-5.1.0.apk
 ```
 
-或把 APK 拷到 U 盘，用电视自带的文件管理器打开安装。桌面有 Leanback 入口图标。
+或把 APK 拷到 U 盘，用电视自带的文件管理器打开安装。安装后在电视桌面（Leanback 入口）有图标。
+
+从 v4.x 升级：包名与签名不变，直接覆盖安装即可，已保存的 TMDB 凭据、代理与资源设置都会保留；WebView 时代存在网页存储里的收藏无法迁移，原生版收藏重新积累。
 
 已知限制：
 
 - 暂不支持 DoH、元数据预热、播放代理探测（桌面版的大陆网络优化三件套）与清单级广告过滤。
-- 遥控器方向键可操作，但页面按鼠标交互设计，部分悬停效果在电视上体验一般。
+- 灵动岛、窗口模式等桌面专属功能不在电视版内。
 - 与桌面版共用资源站与 TMDB 数据，但两端设置相互独立。
 
 ## 快速开始
@@ -163,7 +173,7 @@ CI：向 `v*` tag 推送会自动构建 Windows / macOS / Android 三平台安�
 
 ```text
 CineFlow/
-├─ android/              # Android TV 原生壳（WebView + ExoPlayer + Kotlin 桥接）
+├─ android/              # Android TV 原生应用（Kotlin Views + ExoPlayer）
 ├─ build/                # 应用图标等构建资源
 ├─ electron/             # Electron 主进程与 preload
 ├─ scripts/
